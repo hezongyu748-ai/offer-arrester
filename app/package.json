@@ -1,0 +1,9 @@
+{
+  "name": "offer-arrester",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A usable AI job-matching app for students.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
