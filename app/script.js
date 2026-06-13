@@ -55,12 +55,14 @@ const resumeFileName = $("#resume-file-name");
 const traceList = $("#trace-list");
 const deploymentNote = $("#deployment-note");
 const submissionSummary = $("#submission-summary");
+const jdInput = $("#jd-input");
 const alertModal = $("#alert-modal");
 const alertMessage = $("#alert-message");
 const alertClose = $("#alert-close");
 const alertConfirm = $("#alert-confirm");
 
 let uploadedFile = null;
+let pendingFocusTarget = null;
 
 renderJdCards();
 
@@ -106,7 +108,10 @@ form.addEventListener("submit", async (event) => {
   const payload = Object.fromEntries(new FormData(form).entries());
 
   if (uploadedFile && !payload.jd.trim()) {
-    showAlert("请至少填写目标岗位 JD，或先从示例岗位库选择一个目标岗位。");
+    showAlert(
+      "请至少填写目标岗位 JD，或先从示例岗位库选择一个目标岗位。",
+      jdInput,
+    );
     statusBadge.textContent = "等待输入";
     return;
   }
@@ -290,11 +295,26 @@ function escapeHtml(text) {
     .replaceAll("'", "&#39;");
 }
 
-function showAlert(message) {
+function showAlert(message, focusTarget = null) {
   alertMessage.textContent = message;
+  pendingFocusTarget = focusTarget;
   alertModal.classList.remove("hidden");
 }
 
 function closeAlert() {
   alertModal.classList.add("hidden");
+  if (pendingFocusTarget) {
+    focusField(pendingFocusTarget);
+    pendingFocusTarget = null;
+  }
+}
+
+function focusField(element) {
+  if (!element) return;
+  element.scrollIntoView({ behavior: "smooth", block: "center" });
+  element.classList.add("field-highlight");
+  element.focus({ preventScroll: true });
+  setTimeout(() => {
+    element.classList.remove("field-highlight");
+  }, 2200);
 }
