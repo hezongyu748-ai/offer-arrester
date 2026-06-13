@@ -5,5 +5,8 @@
   "description": "A usable AI job-matching app for students.",
   "scripts": {
     "start": "node server.js"
+  },
+  "dependencies": {
+    "pdf-parse": "^1.1.1"
   }
 }

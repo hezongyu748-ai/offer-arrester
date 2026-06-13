@@ -6,11 +6,12 @@ const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 const DEFAULT_ARK_BASE_URL = process.env.ARK_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3";
 const DEFAULT_ARK_MODEL = process.env.ARK_MODEL || "";
 const DEFAULT_DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
+const { extractResumeText, mergeProfileWithResume } = require("./resume-parser");
 
-function buildPrompt(profile) {
+function buildPrompt(profile, resumeText = "") {
   return [
     "你是 Offer Arrester，一个面向大学生求职场景的 AI 求职匹配助手。",
-    "你要根据学生画像、项目经历、求职意向、目标岗位 JD，以及可选的简历文件，输出结构化分析。",
+    "你要根据学生画像、项目经历、求职意向、目标岗位 JD，以及可选的简历文本，输出结构化分析。",
     "请输出严格 JSON，不要使用 Markdown，不要输出解释性前缀。",
     "JSON 字段必须包含：",
     "matchScore: 0-100 整数",
@@ -33,7 +34,7 @@ function buildPrompt(profile) {
     "2. 分数要有区分度，不要总给高分。",
     "3. actions 必须明确到简历如何改。",
     "4. rewrite.after 要更像真实简历语言。",
-    "5. 如果输入信息不足，也要尽量给出合理建议，但要诚实指出信息缺失。",
+    "5. 如果用户没填完整表单，但有简历文本，请优先利用简历文本补足判断。",
     "",
     "以下是学生输入：",
     `姓名：${profile.name || ""}`,
@@ -42,6 +43,9 @@ function buildPrompt(profile) {
     `核心技能：${profile.skills || ""}`,
     `项目经历：${profile.projects || ""}`,
     `目标岗位JD：${profile.jd || ""}`,
+    "",
+    "以下是从简历文件中提取的文本（如果为空说明用户未上传或提取失败）：",
+    resumeText || "",
   ].join("\n");
 }
 
@@ -170,8 +174,9 @@ async function createCompatibleAnalysis({
   providerLabel,
   profile,
   resumeFile,
+  resumeText,
 }) {
-  const content = [{ type: "input_text", text: buildPrompt(profile) }];
+  const content = [{ type: "input_text", text: buildPrompt(profile, resumeText) }];
 
   if (resumeFile?.base64) {
     const uploaded = await uploadCompatibleFile(apiKey, baseUrl, resumeFile);
@@ -204,8 +209,8 @@ async function createCompatibleAnalysis({
   return normalizeAnalysis(safeJsonParse(extractOpenAIOutputText(json)));
 }
 
-function buildGeminiParts(profile, resumeFile) {
-  const parts = [{ text: buildPrompt(profile) }];
+function buildGeminiParts(profile, resumeFile, resumeText) {
+  const parts = [{ text: buildPrompt(profile, resumeText) }];
 
   if (resumeFile?.base64) {
     parts.unshift({
@@ -219,7 +224,7 @@ function buildGeminiParts(profile, resumeFile) {
   return parts;
 }
 
-async function createGeminiAnalysis(apiKey, profile, resumeFile) {
+async function createGeminiAnalysis(apiKey, profile, resumeFile, resumeText) {
   const response = await fetch(
     `${GEMINI_API_BASE}/models/${DEFAULT_GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`,
     {
@@ -231,7 +236,7 @@ async function createGeminiAnalysis(apiKey, profile, resumeFile) {
         contents: [
           {
             role: "user",
-            parts: buildGeminiParts(profile, resumeFile),
+            parts: buildGeminiParts(profile, resumeFile, resumeText),
           },
         ],
         generationConfig: {
@@ -255,7 +260,7 @@ async function createGeminiAnalysis(apiKey, profile, resumeFile) {
   return normalizeAnalysis(safeJsonParse(outputText));
 }
 
-async function createDeepSeekAnalysis(apiKey, profile) {
+async function createDeepSeekAnalysis(apiKey, profile, resumeText) {
   const response = await fetch(`${DEEPSEEK_API_BASE}/chat/completions`, {
     method: "POST",
     headers: {
@@ -276,7 +281,7 @@ async function createDeepSeekAnalysis(apiKey, profile) {
         },
         {
           role: "user",
-          content: buildPrompt(profile),
+          content: buildPrompt(profile, resumeText),
         },
       ],
     }),
@@ -296,17 +301,20 @@ async function createDeepSeekAnalysis(apiKey, profile) {
 }
 
 async function analyzeOfferArrester(payload) {
-  const profile = payload?.profile || {};
-  if (!profile.goal || !profile.projects || !profile.jd) {
-    throw new Error("请至少填写求职意向、项目经历和目标岗位 JD。");
+  const incomingProfile = payload?.profile || {};
+  const resumeText = await extractResumeText(payload?.resumeFile);
+  const profile = mergeProfileWithResume(incomingProfile, resumeText);
+
+  if (!profile.jd || !profile.jd.trim()) {
+    throw new Error("请至少填写目标岗位 JD，或先从示例岗位库选择一个目标岗位。");
   }
 
   if (process.env.DEEPSEEK_API_KEY) {
-    return createDeepSeekAnalysis(process.env.DEEPSEEK_API_KEY, profile);
+    return createDeepSeekAnalysis(process.env.DEEPSEEK_API_KEY, profile, resumeText);
   }
 
   if (process.env.GEMINI_API_KEY) {
-    return createGeminiAnalysis(process.env.GEMINI_API_KEY, profile, payload.resumeFile);
+    return createGeminiAnalysis(process.env.GEMINI_API_KEY, profile, payload.resumeFile, resumeText);
   }
 
   if (process.env.ARK_API_KEY && DEFAULT_ARK_MODEL) {
@@ -317,6 +325,7 @@ async function analyzeOfferArrester(payload) {
       providerLabel: "豆包 / 火山方舟",
       profile,
       resumeFile: payload.resumeFile,
+      resumeText,
     });
   }
 
@@ -328,6 +337,7 @@ async function analyzeOfferArrester(payload) {
       providerLabel: "OpenAI",
       profile,
       resumeFile: payload.resumeFile,
+      resumeText,
     });
   }
 
