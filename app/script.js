@@ -55,10 +55,22 @@ const resumeFileName = $("#resume-file-name");
 const traceList = $("#trace-list");
 const deploymentNote = $("#deployment-note");
 const submissionSummary = $("#submission-summary");
+const alertModal = $("#alert-modal");
+const alertMessage = $("#alert-message");
+const alertClose = $("#alert-close");
+const alertConfirm = $("#alert-confirm");
 
 let uploadedFile = null;
 
 renderJdCards();
+
+alertClose.addEventListener("click", closeAlert);
+alertConfirm.addEventListener("click", closeAlert);
+alertModal.addEventListener("click", (event) => {
+  if (event.target === alertModal) {
+    closeAlert();
+  }
+});
 
 fillDemoButton.addEventListener("click", () => {
   Object.entries(demoProfile).forEach(([key, value]) => {
@@ -92,6 +104,13 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const payload = Object.fromEntries(new FormData(form).entries());
+
+  if (uploadedFile && !payload.jd.trim()) {
+    showAlert("请至少填写目标岗位 JD，或先从示例岗位库选择一个目标岗位。");
+    statusBadge.textContent = "等待输入";
+    return;
+  }
+
   statusBadge.textContent = "AI 分析中";
   resetOutput();
 
@@ -269,4 +288,13 @@ function escapeHtml(text) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function showAlert(message) {
+  alertMessage.textContent = message;
+  alertModal.classList.remove("hidden");
+}
+
+function closeAlert() {
+  alertModal.classList.add("hidden");
 }

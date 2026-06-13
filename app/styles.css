@@ -494,6 +494,62 @@ input[type="file"] {
   grid-column: 1 / -1;
 }
 
+.hidden {
+  display: none !important;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 20, 18, 0.45);
+}
+
+.modal-card {
+  width: min(520px, 100%);
+  padding: 24px;
+  border-radius: 24px;
+  background: #fffdf8;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-message {
+  margin: 16px 0 0;
+  color: var(--ink);
+  line-height: 1.8;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
 @media (max-width: 1080px) {
   .hero,
   .dashboard,
