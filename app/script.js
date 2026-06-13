@@ -82,7 +82,7 @@ resumeFileInput.addEventListener("change", async () => {
       base64: await fileToBase64(file),
     };
     resumeFileName.textContent = `已载入：${file.name}`;
-  } catch (error) {
+  } catch (_error) {
     uploadedFile = null;
     resumeFileName.textContent = "文件读取失败，请重试";
   }
@@ -117,8 +117,8 @@ form.addEventListener("submit", async (event) => {
     statusBadge.textContent = "分析完成";
   } catch (error) {
     statusBadge.textContent = "调用失败";
-    matchSummary.textContent = error.message;
-    traceList.innerHTML = `<div class="trace-item">接口未返回有效结果。若你已部署到公网，请确认已配置 OPENAI_API_KEY。</div>`;
+    matchSummary.textContent = error.message || "接口调用失败";
+    traceList.innerHTML = `<div class="trace-item">接口未返回有效结果。请检查 DeepSeek 环境变量、/api/analyze 返回内容，或稍后重试。当前错误：${escapeHtml(error.message || "未知错误")}</div>`;
   }
 });
 
@@ -132,7 +132,7 @@ copyRewriteButton.addEventListener("click", async () => {
     setTimeout(() => {
       copyRewriteButton.textContent = "复制优化文案";
     }, 1500);
-  } catch (error) {
+  } catch (_error) {
     copyRewriteButton.textContent = "复制失败";
     setTimeout(() => {
       copyRewriteButton.textContent = "复制优化文案";
@@ -191,6 +191,7 @@ function renderChips(jobs) {
     jobList.textContent = "暂无推荐岗位";
     return;
   }
+
   jobs.forEach((job) => {
     const chip = document.createElement("span");
     chip.className = "chip";
@@ -207,6 +208,7 @@ function renderBullets(container, items) {
     container.appendChild(li);
     return;
   }
+
   items.forEach((item) => {
     const li = document.createElement("li");
     li.textContent = item;
@@ -220,6 +222,7 @@ function renderTraces(items) {
     traceList.innerHTML = `<div class="trace-item">暂无判定依据。</div>`;
     return;
   }
+
   items.forEach((item) => {
     const block = document.createElement("div");
     block.className = "trace-item";
@@ -257,4 +260,13 @@ function guessMimeType(fileName) {
   }
   if (lower.endsWith(".doc")) return "application/msword";
   return "application/octet-stream";
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
