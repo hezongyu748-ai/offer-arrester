@@ -200,22 +200,14 @@ input[type="file"] {
 }
 
 .panel-mini-header h4,
-.submission-card h4,
 .insight-card h4 {
   margin: 0;
 }
 
 .mini-note,
 .upload-caption,
-.upload-file-name,
-.submission-card p {
+.upload-file-name {
   color: var(--muted);
-}
-
-.submission-note {
-  margin: 0 0 18px;
-  color: var(--muted);
-  line-height: 1.7;
 }
 
 .ghost-button,
@@ -396,7 +388,7 @@ input[type="file"] {
 }
 
 .insight-card,
-.submission-card {
+.insight-card {
   padding: 22px;
   border-radius: 22px;
   border: 1px solid var(--line);
@@ -458,8 +450,7 @@ input[type="file"] {
   line-height: 1.7;
 }
 
-.workflow-panel,
-.submission-panel {
+.workflow-panel {
   margin-top: 24px;
 }
 
@@ -496,14 +487,6 @@ input[type="file"] {
   margin: 0;
   color: var(--muted);
   line-height: 1.7;
-}
-
-.submission-grid {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.full-span {
-  grid-column: 1 / -1;
 }
 
 .hidden {
@@ -569,12 +552,7 @@ input[type="file"] {
   .workflow,
   .capability-strip,
   .scoreboard,
-  .insight-grid,
-  .submission-grid {
+  .insight-grid {
     grid-template-columns: 1fr;
-  }
-
-  .full-span {
-    grid-column: auto;
   }
 }

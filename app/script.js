@@ -53,8 +53,6 @@ const jdCardList = $("#jd-card-list");
 const resumeFileInput = $("#resume-file");
 const resumeFileName = $("#resume-file-name");
 const traceList = $("#trace-list");
-const deploymentNote = $("#deployment-note");
-const submissionSummary = $("#submission-summary");
 const jdInput = $("#jd-input");
 const alertModal = $("#alert-modal");
 const alertMessage = $("#alert-message");
@@ -200,13 +198,6 @@ function renderAnalysis(result) {
   renderBullets(gapList, result.gaps || []);
   renderBullets(actionList, result.actions || []);
   renderTraces(result.traces || []);
-
-  if (result.publicUrlHint) {
-    deploymentNote.textContent = result.publicUrlHint;
-  }
-  if (result.submissionSummary) {
-    submissionSummary.textContent = result.submissionSummary;
-  }
 }
 
 function renderChips(jobs) {
