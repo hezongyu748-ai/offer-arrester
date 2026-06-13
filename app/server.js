@@ -5,6 +5,17 @@ const path = require("path");
 loadDotEnv();
 
 const { analyzeOfferArrester } = require("./lib/offer-arrester");
+const {
+  applySecurityHeaders,
+  createHttpError,
+  getClientIp,
+  logServerError,
+  readJsonBody,
+  sendError,
+  sendJson,
+} = require("./lib/http-utils");
+const { enforceRateLimit } = require("./lib/rate-limit");
+const { validateAnalyzePayload } = require("./lib/request-validator");
 
 const PORT = Number(process.env.PORT || 4173);
 const ROOT = __dirname;
@@ -36,27 +47,33 @@ function loadDotEnv() {
   }
 }
 
-function sendJson(res, statusCode, payload) {
-  res.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
-  res.end(JSON.stringify(payload));
-}
-
 function serveStatic(req, res) {
   const requestPath = req.url === "/" ? "/index.html" : req.url.split("?")[0];
   const filePath = path.join(ROOT, decodeURIComponent(requestPath));
 
   if (!filePath.startsWith(ROOT)) {
-    sendJson(res, 403, { error: "Forbidden" });
+    sendError(
+      res,
+      createHttpError(403, "Forbidden", {
+        publicMessage: "访问被拒绝",
+      }),
+    );
     return;
   }
 
   fs.readFile(filePath, (error, data) => {
     if (error) {
-      sendJson(res, 404, { error: "Not Found" });
+      sendError(
+        res,
+        createHttpError(404, "Not Found", {
+          publicMessage: "页面不存在",
+        }),
+      );
       return;
     }
 
     const ext = path.extname(filePath);
+    applySecurityHeaders(res);
     res.writeHead(200, { "Content-Type": mimeTypes[ext] || "application/octet-stream" });
     res.end(data);
   });
@@ -66,45 +83,46 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "GET" && req.url.startsWith("/api/health")) {
     sendJson(res, 200, {
       ok: true,
-      provider: process.env.DEEPSEEK_API_KEY
-        ? "deepseek"
-        : process.env.GEMINI_API_KEY
-        ? "gemini"
-        : process.env.ARK_API_KEY && process.env.ARK_MODEL
-          ? "ark"
-          : process.env.OPENAI_API_KEY
-            ? "openai"
-            : "none",
-      hasDeepSeekKey: Boolean(process.env.DEEPSEEK_API_KEY),
-      hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
-      hasArkKey: Boolean(process.env.ARK_API_KEY),
-      hasOpenAIKey: Boolean(process.env.OPENAI_API_KEY),
-      model: process.env.DEEPSEEK_API_KEY
-        ? process.env.DEEPSEEK_MODEL || "deepseek-v4-flash"
-        : process.env.GEMINI_API_KEY
-        ? process.env.GEMINI_MODEL || "gemini-3.5-flash"
-        : process.env.ARK_API_KEY && process.env.ARK_MODEL
-          ? process.env.ARK_MODEL
-        : process.env.OPENAI_MODEL || "gpt-4.1-mini",
+      service: "offer-arrester",
+      apiReady: Boolean(
+        process.env.DEEPSEEK_API_KEY ||
+          process.env.GEMINI_API_KEY ||
+          (process.env.ARK_API_KEY && process.env.ARK_MODEL) ||
+          process.env.OPENAI_API_KEY,
+      ),
     });
     return;
   }
 
   if (req.method === "POST" && req.url.startsWith("/api/analyze")) {
-    let body = "";
-    req.on("data", (chunk) => {
-      body += chunk;
-    });
+    try {
+      enforceRateLimit(`analyze:${getClientIp(req)}`, {
+        windowMs: 10 * 60 * 1000,
+        maxRequests: 10,
+      });
 
-    req.on("end", async () => {
-      try {
-        const payload = JSON.parse(body || "{}");
-        const result = await analyzeOfferArrester(payload);
-        sendJson(res, 200, result);
-      } catch (error) {
-        sendJson(res, 400, { error: error.message || "分析失败" });
-      }
-    });
+      const payload = await readJsonBody(req, { maxBytes: 1024 * 1024 });
+      validateAnalyzePayload(payload);
+      const result = await analyzeOfferArrester(payload);
+      sendJson(res, 200, result);
+    } catch (error) {
+      logServerError("server.analyze", error, {
+        ip: getClientIp(req),
+        method: req.method,
+        url: req.url,
+      });
+      sendError(res, error, "分析暂时不可用，请稍后重试");
+    }
+    return;
+  }
+
+  if (req.url.startsWith("/api/")) {
+    sendError(
+      res,
+      createHttpError(404, "API route not found", {
+        publicMessage: "接口不存在",
+      }),
+    );
     return;
   }
 

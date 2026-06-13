@@ -140,7 +140,7 @@ form.addEventListener("submit", async (event) => {
   } catch (error) {
     statusBadge.textContent = "调用失败";
     matchSummary.textContent = error.message || "接口调用失败";
-    traceList.innerHTML = `<div class="trace-item">接口未返回有效结果。请检查 DeepSeek 环境变量、/api/analyze 返回内容，或稍后重试。当前错误：${escapeHtml(error.message || "未知错误")}</div>`;
+    traceList.innerHTML = `<div class="trace-item">接口暂未返回有效结果，请稍后重试。当前提示：${escapeHtml(error.message || "未知错误")}</div>`;
   }
 });
 

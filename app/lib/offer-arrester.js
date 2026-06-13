@@ -6,13 +6,15 @@ const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 const DEFAULT_ARK_BASE_URL = process.env.ARK_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3";
 const DEFAULT_ARK_MODEL = process.env.ARK_MODEL || "";
 const DEFAULT_DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
+
 const { extractResumeText, mergeProfileWithResume } = require("./resume-parser");
+const { createHttpError } = require("./http-utils");
 
 function buildPrompt(profile, resumeText = "") {
   return [
     "你是 Offer Arrester，一个面向大学生求职场景的 AI 求职匹配助手。",
     "你要根据学生画像、项目经历、求职意向、目标岗位 JD，以及可选的简历文本，输出结构化分析。",
-    "请输出严格 JSON，不要使用 Markdown，不要输出解释性前缀。",
+    "请严格输出 JSON，不要使用 Markdown，不要输出解释性前缀。",
     "JSON 字段必须包含：",
     "matchScore: 0-100 整数",
     "matchSummary: 一句话总结",
@@ -85,15 +87,15 @@ function ensureJobs(value) {
 function normalizeAnalysis(data) {
   return {
     matchScore: clampInt(data.matchScore, 0, 100, 72),
-    matchSummary: data.matchSummary || "已生成匹配分析。",
+    matchSummary: data.matchSummary || "已生成岗位匹配分析。",
     passScore: clampInt(data.passScore, 0, 100, 68),
-    passSummary: data.passSummary || "已生成简历通过率预测。",
+    passSummary: data.passSummary || "已生成简历初筛通过率预测。",
     bestRole: data.bestRole || "待进一步分析",
     bestRoleReason: data.bestRoleReason || "系统已根据当前画像给出岗位建议。",
     recommendedJobs: ensureJobs(data.recommendedJobs),
     strengths: ensureStrings(data.strengths, 3, "已识别出与目标岗位相关的基础能力。"),
     gaps: ensureStrings(data.gaps, 3, "建议补充更多量化成果和岗位化表达。"),
-    actions: ensureStrings(data.actions, 3, "将项目经历改写为“动作 + 方法 + 结果”的简历表述。"),
+    actions: ensureStrings(data.actions, 3, "将项目经历改写为“动作 + 方法 + 结果”的简历表达。"),
     traces: ensureStrings(data.traces, 3, "系统已结合技能关键词、项目类型和岗位要求进行分析。"),
     rewrite: {
       before: data.rewrite?.before || "原始项目表达未提供。",
@@ -102,13 +104,12 @@ function normalizeAnalysis(data) {
     submissionSummary:
       data.submissionSummary ||
       "Offer Arrester 是一个面向大学生求职场景的 AI 匹配工具，帮助学生快速找到更适合自己的岗位方向，并针对目标 JD 输出匹配分析与简历优化建议。",
-    publicUrlHint:
-      data.publicUrlHint || "部署到公网后，请将首页 URL 填写到提交表单第 6 项。",
+    publicUrlHint: data.publicUrlHint || "部署到公网后，请将首页 URL 填写到提交表单第 6 项。",
   };
 }
 
 function safeJsonParse(text) {
-  const cleaned = text
+  const cleaned = String(text)
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
     .replace(/```$/i, "")
@@ -161,7 +162,7 @@ async function uploadCompatibleFile(apiKey, baseUrl, resumeFile) {
   });
 
   if (!response.ok) {
-    throw new Error(`兼容接口文件上传失败：${await response.text()}`);
+    throw new Error(`Compatible file upload failed: ${await response.text()}`);
   }
 
   return response.json();
@@ -202,7 +203,7 @@ async function createCompatibleAnalysis({
   });
 
   if (!response.ok) {
-    throw new Error(`${providerLabel} 调用失败：${await response.text()}`);
+    throw new Error(`${providerLabel} request failed: ${await response.text()}`);
   }
 
   const json = await response.json();
@@ -248,13 +249,13 @@ async function createGeminiAnalysis(apiKey, profile, resumeFile, resumeText) {
   );
 
   if (!response.ok) {
-    throw new Error(`Gemini 调用失败：${await response.text()}`);
+    throw new Error(`Gemini request failed: ${await response.text()}`);
   }
 
   const json = await response.json();
   const outputText = extractGeminiOutputText(json);
   if (!outputText) {
-    throw new Error("Gemini 未返回可解析内容");
+    throw new Error("Gemini returned empty content");
   }
 
   return normalizeAnalysis(safeJsonParse(outputText));
@@ -276,8 +277,7 @@ async function createDeepSeekAnalysis(apiKey, profile, resumeText) {
       messages: [
         {
           role: "system",
-          content:
-            "你是一个严格输出 JSON 的求职匹配助手。不要输出 Markdown，不要输出解释，只返回 JSON 对象。",
+          content: "你是一个严格输出 JSON 的求职匹配助手。不要输出 Markdown，不要输出解释，只返回 JSON 对象。",
         },
         {
           role: "user",
@@ -288,13 +288,13 @@ async function createDeepSeekAnalysis(apiKey, profile, resumeText) {
   });
 
   if (!response.ok) {
-    throw new Error(`DeepSeek 调用失败：${await response.text()}`);
+    throw new Error(`DeepSeek request failed: ${await response.text()}`);
   }
 
   const json = await response.json();
   const outputText = extractChatCompletionText(json);
   if (!outputText) {
-    throw new Error("DeepSeek 未返回可解析内容");
+    throw new Error("DeepSeek returned empty content");
   }
 
   return normalizeAnalysis(safeJsonParse(outputText));
@@ -302,11 +302,22 @@ async function createDeepSeekAnalysis(apiKey, profile, resumeText) {
 
 async function analyzeOfferArrester(payload) {
   const incomingProfile = payload?.profile || {};
-  const resumeText = await extractResumeText(payload?.resumeFile);
+  let resumeText = "";
+
+  try {
+    resumeText = await extractResumeText(payload?.resumeFile);
+  } catch (error) {
+    throw createHttpError(400, error.message || "Resume parsing failed", {
+      publicMessage: "简历解析失败，请重新上传 PDF 或 DOCX 文件",
+    });
+  }
+
   const profile = mergeProfileWithResume(incomingProfile, resumeText);
 
   if (!profile.jd || !profile.jd.trim()) {
-    throw new Error("请至少填写目标岗位 JD，或先从示例岗位库选择一个目标岗位。");
+    throw createHttpError(400, "Missing target JD", {
+      publicMessage: "请至少填写目标岗位 JD，或先从示例岗位库选择一个目标岗位",
+    });
   }
 
   if (process.env.DEEPSEEK_API_KEY) {
@@ -322,7 +333,7 @@ async function analyzeOfferArrester(payload) {
       apiKey: process.env.ARK_API_KEY,
       baseUrl: DEFAULT_ARK_BASE_URL,
       model: DEFAULT_ARK_MODEL,
-      providerLabel: "豆包 / 火山方舟",
+      providerLabel: "Ark",
       profile,
       resumeFile: payload.resumeFile,
       resumeText,
@@ -341,9 +352,9 @@ async function analyzeOfferArrester(payload) {
     });
   }
 
-  throw new Error(
-    "未配置可用模型密钥。可配置 DEEPSEEK_API_KEY，或 GEMINI_API_KEY，或 ARK_API_KEY + ARK_MODEL，也可使用 OPENAI_API_KEY。",
-  );
+  throw createHttpError(503, "No model provider configured", {
+    publicMessage: "服务暂未完成配置，请稍后重试",
+  });
 }
 
 module.exports = {
