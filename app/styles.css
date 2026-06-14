@@ -273,6 +273,11 @@ input[type="file"] {
   line-height: 1.6;
 }
 
+.upload-card.auto-filled {
+  border-color: rgba(15, 118, 110, 0.24);
+  background: rgba(15, 118, 110, 0.04);
+}
+
 .ghost-button,
 .primary-button,
 .jd-card {
@@ -525,6 +530,12 @@ input[type="file"] {
   margin: 14px 0 0;
   color: var(--accent);
   font-weight: 700;
+}
+
+.recommend-summary {
+  margin: 12px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
 }
 
 .compare-foot {

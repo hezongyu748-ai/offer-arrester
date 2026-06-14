@@ -76,6 +76,7 @@ const jdKeywords = $("#jd-keywords");
 const matchedKeywords = $("#matched-keywords");
 const privacyNote = $("#privacy-note");
 const topThreeJobs = $("#top-three-jobs");
+const topThreeSummary = $("#top-three-summary");
 const compareUplift = $("#compare-uplift");
 const submissionSummary = $("#submission-summary");
 
@@ -116,11 +117,13 @@ resumeFileInput.addEventListener("change", async () => {
       base64: await fileToBase64(file),
     };
     resumeFileName.textContent = `已载入：${file.name}`;
-    resumeAutoFill.textContent = "系统会自动识别简历中的项目与技能，并回填到分析流程中。";
+    resumeAutoFill.textContent = "系统已识别到简历内容，项目与技能信息会自动回填到分析流程中。";
+    resumeFileInput.closest(".upload-card")?.classList.add("auto-filled");
   } catch (_error) {
     uploadedFile = null;
     resumeFileName.textContent = "文件读取失败，请重试";
     resumeAutoFill.textContent = "";
+    resumeFileInput.closest(".upload-card")?.classList.remove("auto-filled");
   }
 });
 
@@ -253,6 +256,7 @@ function renderAnalysis(result) {
   renderExplainCard(result);
   renderKeywordHighlights(result);
   renderCompareCard(result);
+  renderTopThreeSummary(result);
 }
 
 function renderExplainCard(result) {
@@ -294,6 +298,21 @@ function renderKeywordHighlights(result) {
 
 function renderCompareCard(result) {
   if (compareUplift) compareUplift.textContent = `预估提升 ${result.compareCase?.uplift ?? 0}%`;
+}
+
+function renderTopThreeSummary(result) {
+  if (!topThreeSummary) return;
+
+  const jobs = result.topThreeJobs || result.recommendedJobs || [];
+  if (!jobs.length) {
+    topThreeSummary.textContent = "";
+    return;
+  }
+
+  const lead = jobs[0];
+  const second = jobs[1];
+  const third = jobs[2];
+  topThreeSummary.textContent = `优先建议投递 ${lead?.title || "当前方向"}，因为它最贴近你的项目背景和技能命中点；${second?.title ? `其次可以准备 ${second.title}` : ""}${third?.title ? `，再作为补充方向保留 ${third.title}` : ""}。`;
 }
 
 function renderChips(container, jobs) {
