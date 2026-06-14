@@ -77,6 +77,10 @@ const matchedKeywords = $("#matched-keywords");
 const privacyNote = $("#privacy-note");
 const topThreeJobs = $("#top-three-jobs");
 const topThreeSummary = $("#top-three-summary");
+const confidenceLabel = $("#confidence-label");
+const confidenceScore = $("#confidence-score");
+const confidenceSummary = $("#confidence-summary");
+const compareNote = $("#compare-note");
 const compareUplift = $("#compare-uplift");
 const submissionSummary = $("#submission-summary");
 
@@ -190,7 +194,7 @@ function renderStaticPrimer() {
   }
 
   if (privacyNote) {
-    privacyNote.textContent = "简历仅用于本次分析，不做长期存储；页面提交内容也不会用于除分析之外的用途。";
+    privacyNote.textContent = "简历仅用于本次分析，不做长期存储；页面提交内容也不会用于除分析之外的用途。由于本项目通过 Vercel 部署在公网，国内网络环境下可能存在访问不稳定或加载缓慢的情况。若出现无法打开页面的情况，建议切换到可正常访问外网的网络环境后再尝试访问，以确保页面能够稳定加载与使用。";
   }
 }
 
@@ -257,6 +261,7 @@ function renderAnalysis(result) {
   renderKeywordHighlights(result);
   renderCompareCard(result);
   renderTopThreeSummary(result);
+  renderConfidence(result);
 }
 
 function renderExplainCard(result) {
