@@ -323,6 +323,33 @@ function renderTopThreeSummary(result) {
   topThreeSummary.textContent = parts.join(" ");
 }
 
+function renderConfidence(result) {
+  if (!confidenceLabel || !confidenceScore || !confidenceSummary) return;
+
+  const score = Number(result.matchScore);
+  if (!Number.isFinite(score)) {
+    confidenceLabel.textContent = "--";
+    confidenceScore.textContent = "--";
+    confidenceSummary.textContent = "分析完成后会显示当前把握度。";
+    return;
+  }
+
+  confidenceScore.textContent = `${Math.round(score)}%`;
+  if (score >= 82) {
+    confidenceLabel.textContent = "高把握";
+    confidenceSummary.textContent = "当前画像和目标岗位重合度较高，适合优先投递并做轻量优化。";
+    return;
+  }
+
+  if (score >= 68) {
+    confidenceLabel.textContent = "中等把握";
+    confidenceSummary.textContent = "方向基本匹配，但建议补强项目表述和岗位关键词。";
+    return;
+  }
+
+  confidenceLabel.textContent = "待补强";
+  confidenceSummary.textContent = "现阶段更适合先补齐项目表达，再集中投递目标岗位。";
+}
 function renderChips(container, jobs) {
   container.innerHTML = "";
   if (!jobs.length) {
