@@ -1,6 +1,14 @@
+const jdCategories = [
+  { id: "all", label: "全部方向" },
+  { id: "product", label: "产品" },
+  { id: "data", label: "数据" },
+  { id: "ops", label: "运营" },
+];
+
 const sampleJds = [
   {
     id: "ai-pm",
+    category: "product",
     label: "AI 产品经理",
     teaser: "需求分析 / 用户研究 / 数据分析 / AI 理解",
     jd:
@@ -8,6 +16,7 @@ const sampleJds = [
   },
   {
     id: "data-analyst",
+    category: "data",
     label: "数据分析实习生",
     teaser: "SQL / Python / 指标体系 / 可视化",
     jd:
@@ -15,6 +24,7 @@ const sampleJds = [
   },
   {
     id: "product-ops",
+    category: "ops",
     label: "产品运营实习生",
     teaser: "活动运营 / 增长转化 / 用户沟通 / 内容策划",
     jd:
@@ -50,8 +60,10 @@ const beforeText = $("#before-text");
 const afterText = $("#after-text");
 const copyRewriteButton = $("#copy-rewrite");
 const jdCardList = $("#jd-card-list");
+const jdFilterBar = $("#jd-filter-bar");
 const resumeFileInput = $("#resume-file");
 const resumeFileName = $("#resume-file-name");
+const resumeAutoFill = $("#resume-auto-fill");
 const traceList = $("#trace-list");
 const jdInput = $("#jd-input");
 const alertModal = $("#alert-modal");
@@ -64,15 +76,14 @@ const jdKeywords = $("#jd-keywords");
 const matchedKeywords = $("#matched-keywords");
 const privacyNote = $("#privacy-note");
 const topThreeJobs = $("#top-three-jobs");
-const topThreeAdvice = $("#top-three-advice");
-const compareBefore = $("#compare-before");
-const compareAfter = $("#compare-after");
 const compareUplift = $("#compare-uplift");
 const submissionSummary = $("#submission-summary");
 
 let uploadedFile = null;
 let pendingFocusTarget = null;
+let activeCategory = "all";
 
+renderJdFilters();
 renderJdCards();
 renderStaticPrimer();
 
@@ -86,7 +97,7 @@ fillDemoButton.addEventListener("click", () => {
   Object.entries(demoProfile).forEach(([key, value]) => {
     form.elements[key].value = value;
   });
-  statusBadge.textContent = "已填充示例";
+  statusBadge.textContent = "已填充样例";
 });
 
 resumeFileInput.addEventListener("change", async () => {
@@ -94,6 +105,7 @@ resumeFileInput.addEventListener("change", async () => {
   if (!file) {
     uploadedFile = null;
     resumeFileName.textContent = "未选择文件";
+    resumeAutoFill.textContent = "";
     return;
   }
 
@@ -104,9 +116,11 @@ resumeFileInput.addEventListener("change", async () => {
       base64: await fileToBase64(file),
     };
     resumeFileName.textContent = `已载入：${file.name}`;
+    resumeAutoFill.textContent = "系统会自动识别简历中的项目与技能，并回填到分析流程中。";
   } catch (_error) {
     uploadedFile = null;
     resumeFileName.textContent = "文件读取失败，请重试";
+    resumeAutoFill.textContent = "";
   }
 });
 
@@ -177,10 +191,32 @@ function renderStaticPrimer() {
   }
 }
 
+function renderJdFilters() {
+  jdFilterBar.innerHTML = "";
+
+  jdCategories.forEach((item) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `filter-chip${item.id === activeCategory ? " active" : ""}`;
+    button.textContent = item.label;
+    button.addEventListener("click", () => {
+      activeCategory = item.id;
+      renderJdFilters();
+      renderJdCards();
+    });
+    jdFilterBar.appendChild(button);
+  });
+}
+
+function getVisibleJds() {
+  if (activeCategory === "all") return sampleJds;
+  return sampleJds.filter((item) => item.category === activeCategory);
+}
+
 function renderJdCards() {
   jdCardList.innerHTML = "";
 
-  sampleJds.forEach((item, index) => {
+  getVisibleJds().forEach((item, index) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `jd-card${index === 0 ? " active" : ""}`;
@@ -257,8 +293,6 @@ function renderKeywordHighlights(result) {
 }
 
 function renderCompareCard(result) {
-  if (compareBefore) compareBefore.textContent = result.compareCase?.before || result.rewrite?.before || "未提供原始表述";
-  if (compareAfter) compareAfter.textContent = result.compareCase?.after || result.rewrite?.after || "未提供优化结果";
   if (compareUplift) compareUplift.textContent = `预估提升 ${result.compareCase?.uplift ?? 0}%`;
 }
 

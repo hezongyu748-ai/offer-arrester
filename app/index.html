@@ -26,7 +26,7 @@
           </div>
         </div>
         <div class="hero-card">
-          <p class="hero-card-label">当前演示角色</p>
+          <p class="hero-card-label">当前用户画像</p>
           <h2>中山大学信息管理专业学生</h2>
           <ul>
             <li>方向：AI 产品、数据分析、商业分析</li>
@@ -71,7 +71,7 @@
               <p class="panel-kicker">Step 1</p>
               <h3>填写学生画像</h3>
             </div>
-            <button id="fill-demo" class="ghost-button">填充示例</button>
+              <button id="fill-demo" class="ghost-button">填充样例</button>
           </div>
 
           <div class="upload-card">
@@ -82,16 +82,18 @@
             <label class="upload-button" for="resume-file">选择文件</label>
             <input id="resume-file" type="file" accept=".pdf,.doc,.docx" />
             <p id="resume-file-name" class="upload-file-name">未选择文件</p>
+            <p id="resume-auto-fill" class="upload-hint"></p>
           </div>
 
           <div class="sample-jd-panel">
             <div class="panel-mini-header">
               <div>
                 <p class="panel-kicker">Quick Start</p>
-                <h4>示例岗位库</h4>
+                <h4>岗位库</h4>
               </div>
               <span class="mini-note">点击即可自动填充 JD</span>
             </div>
+            <div id="jd-filter-bar" class="filter-bar"></div>
             <div id="jd-card-list" class="jd-card-list"></div>
           </div>
 
