@@ -544,6 +544,40 @@ input[type="file"] {
   line-height: 1.7;
 }
 
+.confidence-block {
+  display: grid;
+  gap: 14px;
+}
+
+.confidence-meter {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(15, 118, 110, 0.08), rgba(245, 158, 11, 0.08));
+}
+
+.confidence-meter span {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.confidence-meter strong {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.confidence-summary {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 .compare-foot {
   display: flex;
   flex-wrap: wrap;
@@ -553,6 +587,12 @@ input[type="file"] {
   padding-top: 18px;
   border-top: 1px solid var(--line);
   color: var(--muted);
+}
+
+.compare-foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .empty-state {
