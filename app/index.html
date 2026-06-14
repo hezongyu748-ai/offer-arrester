@@ -6,7 +6,7 @@
     <title>Offer Arrester</title>
     <meta
       name="description"
-      content="Offer Arrester 是一个面向学生求职场景的 AI 岗位匹配与简历优化工具。"
+      content="Offer Arrester 是面向大学生求职场景的 AI 岗位匹配与简历优化工具。"
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -14,10 +14,10 @@
     <div class="page-shell">
       <header class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">AI-HR Public Demo</p>
+          <p class="eyebrow">AI-HR Student Career Tool</p>
           <h1>Offer Arrester</h1>
           <p class="hero-subtitle">
-            帮学生从海量岗位里拦截真正适合自己的机会，并把简历优化成更容易通过初筛的版本。
+            用更少的时间找到更适合的岗位，并把简历改成更容易通过初筛的表达方式。
           </p>
           <div class="hero-tags">
             <span>岗位推荐</span>
@@ -29,9 +29,9 @@
           <p class="hero-card-label">当前演示角色</p>
           <h2>中山大学信息管理专业学生</h2>
           <ul>
-            <li>目标方向：产品经理 / 数据分析 / AI 产品</li>
-            <li>优势：数据分析、校园项目、用户研究</li>
-            <li>痛点：不知道该投什么岗，简历表达偏弱</li>
+            <li>方向：AI 产品、数据分析、商业分析</li>
+            <li>优势：项目经历、调研能力、表达能力</li>
+            <li>痛点：不确定投什么岗，简历怎么改更有效</li>
           </ul>
         </div>
       </header>
@@ -40,18 +40,28 @@
         <article>
           <p>AI Parsing</p>
           <strong>简历与 JD 双向解析</strong>
-          <span>自动识别技能标签、项目关键词、表达缺口</span>
+          <span>自动识别技能、项目和岗位关键词，减少手动比对成本。</span>
         </article>
         <article>
           <p>Smart Match</p>
-          <strong>岗位推荐不只看关键词</strong>
-          <span>同时参考经历类型、能力迁移性和目标方向</span>
+          <strong>岗位推荐更像真人顾问</strong>
+          <span>同时参考技能、项目背景、目标方向和命中度。</span>
         </article>
         <article>
           <p>Rewrite Assist</p>
           <strong>把经历改成岗位语言</strong>
-          <span>帮助学生从“做过什么”升级成“为什么适合这个岗”</span>
+          <span>让学生知道“为什么匹配、差在哪、怎么改”。</span>
         </article>
+      </section>
+
+      <section class="panel privacy-panel">
+        <div class="privacy-row">
+          <div>
+            <p class="panel-kicker">Privacy</p>
+            <h3>隐私与使用说明</h3>
+          </div>
+          <p id="privacy-note" class="privacy-text"></p>
+        </div>
       </section>
 
       <main class="dashboard">
@@ -67,7 +77,7 @@
           <div class="upload-card">
             <div>
               <p class="upload-title">上传简历</p>
-              <span class="upload-caption">支持 PDF / DOCX，当前 Demo 用示例解析代替真实抽取</span>
+              <span class="upload-caption">支持 PDF / DOCX，系统会自动提取文本辅助分析。</span>
             </div>
             <label class="upload-button" for="resume-file">选择文件</label>
             <input id="resume-file" type="file" accept=".pdf,.doc,.docx" />
@@ -92,26 +102,18 @@
             </label>
             <label>
               学校 / 专业 / 年级
-              <input
-                type="text"
-                name="school"
-                placeholder="例如：中山大学 / 信息管理 / 大三"
-              />
+              <input type="text" name="school" placeholder="例如：中山大学 / 信息管理与信息系统 / 大三" />
             </label>
             <label>
               求职意向
-              <input
-                type="text"
-                name="goal"
-                placeholder="例如：AI 产品经理、数据分析师"
-              />
+              <input type="text" name="goal" placeholder="例如：AI 产品经理、数据分析师" />
             </label>
             <label>
               核心技能
               <textarea
                 name="skills"
                 rows="4"
-                placeholder="例如：SQL、Python、Axure、用户访谈、竞品分析、Prompt 设计"
+                placeholder="例如：SQL、Python、Excel、用户访谈、竞品分析、Axure、Prompt 设计"
               ></textarea>
             </label>
             <label>
@@ -151,21 +153,44 @@
               <span id="match-summary">请先填写左侧信息</span>
             </div>
             <div class="score-card">
-              <p>简历通过率预测</p>
+              <p>简历初筛通过率</p>
               <strong id="pass-score">--</strong>
               <span id="pass-summary">系统会结合表达质量估算</span>
             </div>
             <div class="score-card">
               <p>最适合投递方向</p>
               <strong id="best-role">--</strong>
-              <span id="best-role-summary">推荐岗位将在这里出现</span>
+              <span id="best-role-summary">推荐岗位会显示在这里</span>
             </div>
+          </div>
+
+          <div class="explain-grid">
+            <article class="insight-card explain-card">
+              <h4>结果解释</h4>
+              <p id="result-explain" class="explain-text">系统会说明为什么是这个分、差在哪、改完能提升多少。</p>
+              <p id="improvement-potential" class="explain-note"></p>
+            </article>
+            <article class="insight-card">
+              <h4>适合投递岗位 Top 3</h4>
+              <div id="top-three-jobs" class="job-list"></div>
+            </article>
           </div>
 
           <div class="insight-grid">
             <article class="insight-card">
               <h4>推荐岗位 Top 3</h4>
-              <div id="job-list" class="chip-list empty-state">提交后生成推荐</div>
+              <div id="job-list" class="chip-list empty-state"></div>
+            </article>
+            <article class="insight-card">
+              <h4>命中关键词</h4>
+              <div class="keyword-block">
+                <p class="keyword-title">JD 关键词</p>
+                <div id="jd-keywords" class="chip-list"></div>
+              </div>
+              <div class="keyword-block">
+                <p class="keyword-title">简历命中点</p>
+                <div id="matched-keywords" class="chip-list"></div>
+              </div>
             </article>
             <article class="insight-card">
               <h4>你的优势</h4>
@@ -185,41 +210,37 @@
                 <li>等待分析</li>
               </ul>
             </article>
+            <article class="insight-card">
+              <h4>岗位适配理由</h4>
+              <div id="trace-list" class="trace-list">
+                <div class="trace-item">等待分析后显示关键词命中、项目关联和岗位信号。</div>
+              </div>
+            </article>
           </div>
 
           <div class="resume-rewrite">
             <div class="rewrite-header">
               <div>
                 <p class="panel-kicker">Step 3</p>
-                <h3>AI 改写示例</h3>
+                <h3>简历前后对比</h3>
               </div>
               <button id="copy-rewrite" class="ghost-button">复制优化文案</button>
             </div>
             <div class="rewrite-columns">
               <article>
                 <p class="rewrite-label">原始表达</p>
-                <div id="before-text" class="rewrite-box muted-box">
-                  例如：负责社团活动宣传，做过用户调研。
-                </div>
+                <div id="before-text" class="rewrite-box muted-box">等待分析后显示原始表述。</div>
               </article>
               <article>
                 <p class="rewrite-label">优化后表达</p>
                 <div id="after-text" class="rewrite-box highlighted-box">
-                  AI 会自动把经历改写成更像岗位语言的简历表述。
+                  AI 会自动把经历改写成更贴近岗位语言的简历表述。
                 </div>
               </article>
             </div>
-          </div>
-
-          <div class="analysis-trace">
-            <div class="panel-mini-header">
-              <div>
-                <p class="panel-kicker">AI Reasoning</p>
-                <h4>系统判定依据</h4>
-              </div>
-            </div>
-            <div id="trace-list" class="trace-list">
-              <div class="trace-item">等待分析后显示关键词命中、项目标签和风险提醒。</div>
+            <div class="compare-foot">
+              <span id="compare-uplift">预估提升 --%</span>
+              <p id="submission-summary"></p>
             </div>
           </div>
         </section>
@@ -236,26 +257,25 @@
           <div>
             <span>01</span>
             <h4>输入简历与目标</h4>
-            <p>提取技能、项目、意向岗位，形成学生画像。</p>
+            <p>从学生画像出发，建立初始求职定位。</p>
           </div>
           <div>
             <span>02</span>
-            <h4>解析目标 JD</h4>
-            <p>拆解显性要求、隐性关键词、经验门槛。</p>
+            <h4>选择示例岗位或粘贴 JD</h4>
+            <p>先选方向，再补齐岗位要求，减少空转。</p>
           </div>
           <div>
             <span>03</span>
-            <h4>输出匹配建议</h4>
-            <p>给出岗位推荐、差距诊断和简历优化动作。</p>
+            <h4>生成结果与解释</h4>
+            <p>输出分数、岗位 Top 3、命中点、短板和优化动作。</p>
           </div>
           <div>
             <span>04</span>
-            <h4>提升投递命中率</h4>
-            <p>针对目标岗位生成更适合 ATS 和 HR 阅读的表达。</p>
+            <h4>优化简历再投递</h4>
+            <p>把原始表达改成更适合 ATS 和 HR 的版本。</p>
           </div>
         </div>
       </section>
-
     </div>
 
     <div id="alert-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="alert-title">
@@ -273,4 +293,4 @@
 
     <script src="./script.js"></script>
   </body>
-  </html>
+</html>

@@ -4,27 +4,27 @@ const sampleJds = [
     label: "AI 产品经理",
     teaser: "需求分析 / 用户研究 / 数据分析 / AI 理解",
     jd:
-      "岗位：AI产品经理实习生\n职责：参与 AI 产品需求分析、用户研究、竞品调研、数据分析与功能迭代；与研发和设计协同推进项目落地。\n要求：本科及以上在读，逻辑清晰，有产品意识；具备数据分析能力，熟悉 SQL 或 Python 优先；有 AI 产品、校园项目、用户研究经历优先；表达能力强，能把复杂问题讲清楚。",
+      "岗位：AI产品经理实习生\n职责：参与AI产品需求分析、用户研究、竞品调研、数据分析与功能迭代；与研发和设计协同推进项目落地。\n要求：本科及以上在读，逻辑清晰，有产品意识；具备数据分析能力，熟悉 SQL 或 Python 优先；有AI产品、校园项目、用户研究经历优先；表达能力强，能够把复杂问题讲清楚。",
   },
   {
     id: "data-analyst",
     label: "数据分析实习生",
     teaser: "SQL / Python / 指标体系 / 可视化",
     jd:
-      "岗位：数据分析实习生\n职责：支持业务指标监控、报表搭建、用户行为分析、增长漏斗分析和专题复盘。\n要求：熟悉 SQL、Excel、Python 其中两项；具备结构化分析能力，能输出洞察结论；有数据分析项目、商业分析或增长分析经历优先。",
+      "岗位：数据分析实习生\n职责：支持业务指标监控、报表搭建、用户行为分析、增长漏斗分析和专题复盘。\n要求：熟悉 SQL、Excel、Python 中两项；具备结构化分析能力，能输出洞察结论；有数据分析项目、商业分析或增长分析经历优先。",
   },
   {
     id: "product-ops",
     label: "产品运营实习生",
     teaser: "活动运营 / 增长转化 / 用户沟通 / 内容策划",
     jd:
-      "岗位：产品运营实习生\n职责：参与活动策划、用户运营、内容搭建和转化提升；协同产品和设计推动优化。\n要求：有用户意识和执行力，善于沟通，有校园活动、内容运营或增长项目经验优先，能结合数据发现问题并提出方案。",
+      "岗位：产品运营实习生\n职责：参与活动策划、用户运营、内容搭建和转化提升；协同产品和设计推动优化。\n要求：有用户意识和执行力，善于沟通；有校园活动、内容运营或增长项目经历优先，能结合数据发现问题并提出方案。",
   },
 ];
 
 const demoProfile = {
   name: "李然",
-  school: "中山大学 / 信息管理与信息系统 / 大三",
+  school: "中山大学信息管理与信息系统 / 大三",
   goal: "AI 产品经理、数据分析师、商业分析实习生",
   skills: "SQL、Python、Excel、问卷设计、用户访谈、竞品分析、Axure、Prompt 设计、基础数据可视化",
   projects:
@@ -58,25 +58,35 @@ const alertModal = $("#alert-modal");
 const alertMessage = $("#alert-message");
 const alertClose = $("#alert-close");
 const alertConfirm = $("#alert-confirm");
+const resultExplain = $("#result-explain");
+const improvementPotential = $("#improvement-potential");
+const jdKeywords = $("#jd-keywords");
+const matchedKeywords = $("#matched-keywords");
+const privacyNote = $("#privacy-note");
+const topThreeJobs = $("#top-three-jobs");
+const topThreeAdvice = $("#top-three-advice");
+const compareBefore = $("#compare-before");
+const compareAfter = $("#compare-after");
+const compareUplift = $("#compare-uplift");
+const submissionSummary = $("#submission-summary");
 
 let uploadedFile = null;
 let pendingFocusTarget = null;
 
 renderJdCards();
+renderStaticPrimer();
 
 alertClose.addEventListener("click", closeAlert);
 alertConfirm.addEventListener("click", closeAlert);
 alertModal.addEventListener("click", (event) => {
-  if (event.target === alertModal) {
-    closeAlert();
-  }
+  if (event.target === alertModal) closeAlert();
 });
 
 fillDemoButton.addEventListener("click", () => {
   Object.entries(demoProfile).forEach(([key, value]) => {
     form.elements[key].value = value;
   });
-  statusBadge.textContent = "已加载示例";
+  statusBadge.textContent = "已填充示例";
 });
 
 resumeFileInput.addEventListener("change", async () => {
@@ -106,10 +116,7 @@ form.addEventListener("submit", async (event) => {
   const payload = Object.fromEntries(new FormData(form).entries());
 
   if (uploadedFile && !payload.jd.trim()) {
-    showAlert(
-      "请至少填写目标岗位 JD，或先从示例岗位库选择一个目标岗位。",
-      jdInput,
-    );
+    showAlert("请至少填写目标岗位 JD，或先从示例岗位库选择一个目标岗位。", jdInput);
     statusBadge.textContent = "等待输入";
     return;
   }
@@ -120,9 +127,7 @@ form.addEventListener("submit", async (event) => {
   try {
     const response = await fetch("/api/analyze", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         profile: payload,
         resumeFile: uploadedFile,
@@ -130,7 +135,6 @@ form.addEventListener("submit", async (event) => {
     });
 
     const result = await response.json();
-
     if (!response.ok) {
       throw new Error(result.error || "分析失败，请稍后重试");
     }
@@ -162,6 +166,17 @@ copyRewriteButton.addEventListener("click", async () => {
   }
 });
 
+function renderStaticPrimer() {
+  if (submissionSummary) {
+    submissionSummary.textContent =
+      "Offer Arrester 是一个面向大学生求职场景的 AI 匹配工具，帮助学生快速找到更适合自己的岗位方向，并针对目标 JD 输出匹配分析与简历优化建议。";
+  }
+
+  if (privacyNote) {
+    privacyNote.textContent = "简历仅用于本次分析，不做长期存储；页面提交内容也不会用于除分析之外的用途。";
+  }
+}
+
 function renderJdCards() {
   jdCardList.innerHTML = "";
 
@@ -178,6 +193,7 @@ function renderJdCards() {
       document.querySelectorAll(".jd-card").forEach((card) => card.classList.remove("active"));
       button.classList.add("active");
       statusBadge.textContent = `已切换到 ${item.label}`;
+      focusField(jdInput);
     });
     jdCardList.appendChild(button);
   });
@@ -185,33 +201,86 @@ function renderJdCards() {
 
 function renderAnalysis(result) {
   matchScore.textContent = `${result.matchScore ?? "--"}%`;
-  matchSummary.textContent = result.matchSummary || "已生成分析结果";
+  matchSummary.textContent = result.matchSummary || "已生成匹配结论";
   passScore.textContent = `${result.passScore ?? "--"}%`;
   passSummary.textContent = result.passSummary || "";
   bestRole.textContent = result.bestRole || "--";
   bestRoleSummary.textContent = result.bestRoleReason || "";
-  beforeText.textContent = result.rewrite?.before || "未返回原始表达";
-  afterText.textContent = result.rewrite?.after || "未返回优化结果";
+  beforeText.textContent = result.compareCase?.before || result.rewrite?.before || "未提供原始表述";
+  afterText.textContent = result.compareCase?.after || result.rewrite?.after || "未提供优化结果";
 
-  renderChips(result.recommendedJobs || []);
+  renderChips(topThreeJobs, result.topThreeJobs || result.recommendedJobs || []);
   renderBullets(strengthList, result.strengths || []);
   renderBullets(gapList, result.gaps || []);
   renderBullets(actionList, result.actions || []);
   renderTraces(result.traces || []);
+  renderExplainCard(result);
+  renderKeywordHighlights(result);
+  renderCompareCard(result);
 }
 
-function renderChips(jobs) {
-  jobList.innerHTML = "";
+function renderExplainCard(result) {
+  if (resultExplain) {
+    resultExplain.textContent = result.scoreExplanation || "当前画像和岗位已完成结构化匹配。";
+  }
+  if (improvementPotential) {
+    improvementPotential.textContent = result.improvementPotential || "如果按建议完成简历优化，预估匹配表现可继续提升。";
+  }
+}
+
+function renderKeywordHighlights(result) {
+  if (jdKeywords) {
+    jdKeywords.innerHTML = "";
+    (result.jdKeywords || []).forEach((keyword) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = keyword;
+      jdKeywords.appendChild(chip);
+    });
+    if (!result.jdKeywords?.length) {
+      jdKeywords.innerHTML = `<span class="empty-inline">暂无关键词</span>`;
+    }
+  }
+
+  if (matchedKeywords) {
+    matchedKeywords.innerHTML = "";
+    (result.matchedKeywords || []).forEach((keyword) => {
+      const chip = document.createElement("span");
+      chip.className = "chip highlight-chip";
+      chip.textContent = keyword;
+      matchedKeywords.appendChild(chip);
+    });
+    if (!result.matchedKeywords?.length) {
+      matchedKeywords.innerHTML = `<span class="empty-inline">暂无高亮命中</span>`;
+    }
+  }
+}
+
+function renderCompareCard(result) {
+  if (compareBefore) compareBefore.textContent = result.compareCase?.before || result.rewrite?.before || "未提供原始表述";
+  if (compareAfter) compareAfter.textContent = result.compareCase?.after || result.rewrite?.after || "未提供优化结果";
+  if (compareUplift) compareUplift.textContent = `预估提升 ${result.compareCase?.uplift ?? 0}%`;
+}
+
+function renderChips(container, jobs) {
+  container.innerHTML = "";
   if (!jobs.length) {
-    jobList.textContent = "暂无推荐岗位";
+    container.innerHTML = `<span class="empty-inline">暂无推荐岗位</span>`;
     return;
   }
 
   jobs.forEach((job) => {
-    const chip = document.createElement("span");
-    chip.className = "chip";
-    chip.textContent = `${job.title} ${job.score}%`;
-    jobList.appendChild(chip);
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "job-chip";
+    chip.innerHTML = `<strong>${job.title}</strong><span>${job.score}% · ${job.reason || "匹配理由待补充"}</span>`;
+    chip.addEventListener("click", () => {
+      const matchedSample = sampleJds.find((item) => job.title.includes(item.label.split(" ")[0]));
+      form.elements.jd.value = matchedSample?.jd || sampleJds[0].jd;
+      focusField(jdInput);
+      showAlert(`已帮你定位到“${job.title}”方向。你也可以继续手动补充目标 JD，再生成更精确的结果。`, jdInput);
+    });
+    container.appendChild(chip);
   });
 }
 
@@ -234,7 +303,7 @@ function renderBullets(container, items) {
 function renderTraces(items) {
   traceList.innerHTML = "";
   if (!items.length) {
-    traceList.innerHTML = `<div class="trace-item">暂无判定依据。</div>`;
+    traceList.innerHTML = `<div class="trace-item">系统已完成结构化分析。</div>`;
     return;
   }
 
@@ -270,9 +339,7 @@ function fileToBase64(file) {
 function guessMimeType(fileName) {
   const lower = fileName.toLowerCase();
   if (lower.endsWith(".pdf")) return "application/pdf";
-  if (lower.endsWith(".docx")) {
-    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-  }
+  if (lower.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   if (lower.endsWith(".doc")) return "application/msword";
   return "application/octet-stream";
 }

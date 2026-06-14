@@ -41,6 +41,24 @@ input[type="file"] {
   padding: 32px 0 56px;
 }
 
+.privacy-panel {
+  margin-top: 24px;
+}
+
+.privacy-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.privacy-text {
+  margin: 0;
+  max-width: 760px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 .hero,
 .dashboard {
   display: grid;
@@ -135,6 +153,10 @@ input[type="file"] {
   color: rgba(248, 255, 253, 0.88);
 }
 
+.hero-card li {
+  margin-bottom: 6px;
+}
+
 .capability-strip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -168,6 +190,13 @@ input[type="file"] {
 .capability-strip span {
   color: var(--muted);
   line-height: 1.7;
+}
+
+.explain-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
 .dashboard {
@@ -402,6 +431,79 @@ input[type="file"] {
   line-height: 1.8;
 }
 
+.keyword-block + .keyword-block {
+  margin-top: 18px;
+}
+
+.keyword-title {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.job-list {
+  display: grid;
+  gap: 10px;
+}
+
+.job-chip {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(15, 118, 110, 0.05);
+  text-align: left;
+  cursor: pointer;
+}
+
+.job-chip strong,
+.job-chip span {
+  display: block;
+}
+
+.job-chip span {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.highlight-chip {
+  background: rgba(245, 158, 11, 0.14) !important;
+  color: #8a5a00 !important;
+}
+
+.empty-inline {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.explain-card {
+  background: linear-gradient(180deg, rgba(15, 118, 110, 0.08), rgba(255, 255, 255, 0.8));
+}
+
+.explain-text {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.8;
+}
+
+.explain-note {
+  margin: 14px 0 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.compare-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+
 .empty-state {
   color: var(--muted);
 }
@@ -552,7 +654,12 @@ input[type="file"] {
   .workflow,
   .capability-strip,
   .scoreboard,
-  .insight-grid {
+  .insight-grid,
+  .explain-grid {
     grid-template-columns: 1fr;
+  }
+
+  .privacy-row {
+    flex-direction: column;
   }
 }

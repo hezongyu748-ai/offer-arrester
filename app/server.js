@@ -47,11 +47,32 @@ function loadDotEnv() {
   }
 }
 
-function serveStatic(req, res) {
-  const requestPath = req.url === "/" ? "/index.html" : req.url.split("?")[0];
-  const filePath = path.join(ROOT, decodeURIComponent(requestPath));
+function getRequestPath(req) {
+  try {
+    return new URL(req.url, "http://localhost").pathname || "/";
+  } catch (_error) {
+    return "/";
+  }
+}
 
-  if (!filePath.startsWith(ROOT)) {
+function serveStatic(req, res) {
+  let requestPath = getRequestPath(req);
+  if (requestPath === "/") requestPath = "/index.html";
+
+  let filePath;
+  try {
+    filePath = path.resolve(ROOT, `.${decodeURIComponent(requestPath)}`);
+  } catch (_error) {
+    sendError(
+      res,
+      createHttpError(400, "Bad Request", {
+        publicMessage: "请求路径无效，请重新刷新页面",
+      }),
+    );
+    return;
+  }
+
+  if (!filePath.startsWith(`${ROOT}${path.sep}`) && filePath !== ROOT) {
     sendError(
       res,
       createHttpError(403, "Forbidden", {
@@ -80,7 +101,9 @@ function serveStatic(req, res) {
 }
 
 const server = http.createServer(async (req, res) => {
-  if (req.method === "GET" && req.url.startsWith("/api/health")) {
+  const pathname = getRequestPath(req);
+
+  if (req.method === "GET" && pathname === "/api/health") {
     sendJson(res, 200, {
       ok: true,
       service: "offer-arrester",
@@ -94,7 +117,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.method === "POST" && req.url.startsWith("/api/analyze")) {
+  if (req.method === "POST" && pathname === "/api/analyze") {
     try {
       enforceRateLimit(`analyze:${getClientIp(req)}`, {
         windowMs: 10 * 60 * 1000,
@@ -109,14 +132,14 @@ const server = http.createServer(async (req, res) => {
       logServerError("server.analyze", error, {
         ip: getClientIp(req),
         method: req.method,
-        url: req.url,
+        url: pathname,
       });
       sendError(res, error, "分析暂时不可用，请稍后重试");
     }
     return;
   }
 
-  if (req.url.startsWith("/api/")) {
+  if (pathname.startsWith("/api/")) {
     sendError(
       res,
       createHttpError(404, "API route not found", {
