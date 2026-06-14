@@ -312,7 +312,10 @@ function renderTopThreeSummary(result) {
   const lead = jobs[0];
   const second = jobs[1];
   const third = jobs[2];
-  topThreeSummary.textContent = `优先建议投递 ${lead?.title || "当前方向"}，因为它最贴近你的项目背景和技能命中点；${second?.title ? `其次可以准备 ${second.title}` : ""}${third?.title ? `，再作为补充方向保留 ${third.title}` : ""}。`;
+  const parts = [`优先建议投递 ${lead?.title || "当前方向"}，因为它最贴近你的项目背景和技能命中点。`];
+  if (second?.title) parts.push(`其次可以准备 ${second.title}。`);
+  if (third?.title) parts.push(`再把 ${third.title} 作为补充方向。`);
+  topThreeSummary.textContent = parts.join(" ");
 }
 
 function renderChips(container, jobs) {
@@ -326,12 +329,24 @@ function renderChips(container, jobs) {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "job-chip";
+    chip.setAttribute("aria-pressed", "false");
     chip.innerHTML = `<strong>${job.title}</strong><span>${job.score}% · ${job.reason || "匹配理由待补充"}</span>`;
     chip.addEventListener("click", () => {
       const matchedSample = sampleJds.find((item) => job.title.includes(item.label.split(" ")[0]));
-      form.elements.jd.value = matchedSample?.jd || sampleJds[0].jd;
+      const nextJd = matchedSample?.jd || sampleJds[0].jd;
+      form.elements.jd.value = nextJd;
+      document.querySelectorAll(".job-chip").forEach((item) => {
+        item.classList.remove("selected");
+        item.setAttribute("aria-pressed", "false");
+      });
+      chip.classList.add("selected");
+      chip.setAttribute("aria-pressed", "true");
+      statusBadge.textContent = `已选择：${job.title}`;
       focusField(jdInput);
-      showAlert(`已帮你定位到“${job.title}”方向。你也可以继续手动补充目标 JD，再生成更精确的结果。`, jdInput);
+      showAlert(
+        `已帮你定位到“${job.title}”方向，JD 已自动带入输入框。你可以直接在此基础上继续微调，再生成更精确的结果。`,
+        jdInput,
+      );
     });
     container.appendChild(chip);
   });
